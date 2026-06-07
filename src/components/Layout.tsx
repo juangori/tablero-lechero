@@ -100,7 +100,16 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="hidden md:block text-sm text-white/70">
               {NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)))?.label}
             </div>
-            <SeasonSelector />
+            <div className="flex items-center gap-2">
+              <SeasonSelector />
+              <button
+                onClick={signOut}
+                title="Salir"
+                className="md:hidden grid place-items-center h-8 w-8 rounded-xl bg-white/15 text-white ring-1 ring-white/20 hover:bg-white/20"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </header>
 
