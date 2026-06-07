@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-[#f6f7f4] text-campo-900 antialiased;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Inputs numéricos sin spinners molestos */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-campo-600 text-white hover:bg-campo-700;
+  }
+  .btn-ghost {
+    @apply btn bg-campo-50 text-campo-700 hover:bg-campo-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-50 text-red-700 hover:bg-red-100;
+  }
+  .input {
+    @apply w-full rounded-xl border-0 bg-campo-50/60 px-3 py-2 text-sm ring-1 ring-inset ring-campo-200 focus:bg-white focus:ring-2 focus:ring-campo-500 outline-none;
+  }
+  .label {
+    @apply block text-xs font-semibold uppercase tracking-wide text-campo-700/70 mb-1;
+  }
+  .cell-input {
+    @apply w-full rounded-lg bg-transparent px-2 py-1.5 text-sm text-right tabular-nums focus:bg-white focus:ring-2 focus:ring-campo-500 outline-none;
+  }
+}
+
+/* Scrollbar discreta para tablas anchas */
+.scroll-x {
+  scrollbar-width: thin;
+}
