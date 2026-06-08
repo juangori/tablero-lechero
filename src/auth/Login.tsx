@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Milk, Loader2, LogIn } from 'lucide-react'
 import { useAuth } from './AuthProvider'
+import { useI18n } from '../lib/i18n'
+import LangToggle from '../components/LangToggle'
 
 export default function Login() {
   const { signIn } = useAuth()
+  const { t } = useI18n()
   const [email, setEmail] = useState('juangori@gmail.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -14,24 +17,27 @@ export default function Login() {
     setBusy(true)
     setError(null)
     const { error } = await signIn(email, password)
-    if (error) setError(traducir(error))
+    if (error) setError(translateError(error, t))
     setBusy(false)
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-campo-100 via-[#f6f7f4] to-campo-50">
+      <div className="absolute top-4 right-4">
+        <LangToggle variant="light" />
+      </div>
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <div className="h-16 w-16 rounded-2xl bg-campo-600 text-white grid place-items-center shadow-lg shadow-campo-600/20">
             <Milk size={32} />
           </div>
-          <h1 className="mt-4 text-2xl font-extrabold text-campo-800">Tablero Lechero</h1>
-          <p className="text-sm text-campo-700/70">Campo Norte · La Elvira</p>
+          <h1 className="mt-4 text-2xl font-extrabold text-campo-800">{t('app.name')}</h1>
+          <p className="text-sm text-campo-700/70">{t('login.brandSub')}</p>
         </div>
 
         <form onSubmit={onSubmit} className="card p-6 space-y-4">
           <div>
-            <label className="label">Email</label>
+            <label className="label">{t('login.email')}</label>
             <input
               className="input"
               type="email"
@@ -42,7 +48,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="label">Contraseña</label>
+            <label className="label">{t('login.password')}</label>
             <input
               className="input"
               type="password"
@@ -61,19 +67,17 @@ export default function Login() {
 
           <button className="btn-primary w-full" disabled={busy}>
             {busy ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
-            Entrar
+            {t('login.submit')}
           </button>
         </form>
-        <p className="text-center text-xs text-campo-700/50 mt-4">
-          Acceso privado. Tus datos están protegidos.
-        </p>
+        <p className="text-center text-xs text-campo-700/50 mt-4">{t('login.footer')}</p>
       </div>
     </div>
   )
 }
 
-function traducir(msg: string): string {
-  if (/invalid login credentials/i.test(msg)) return 'Email o contraseña incorrectos.'
-  if (/email not confirmed/i.test(msg)) return 'El email no está confirmado.'
+function translateError(msg: string, t: (k: string) => string): string {
+  if (/invalid login credentials/i.test(msg)) return t('login.err.invalid')
+  if (/email not confirmed/i.test(msg)) return t('login.err.unconfirmed')
   return msg
 }
