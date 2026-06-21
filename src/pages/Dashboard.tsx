@@ -11,13 +11,15 @@ import {
 } from 'recharts'
 import { LayoutDashboard, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { PageHeader, Spinner, EmptyState } from '../components/ui'
-import { MONTHS, monthShort } from '../lib/months'
+import { MONTHS, monthShort, monthLong } from '../lib/months'
 import { fmtNumber, deviation, deviationStatus, statusText } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useBudgets, useIndicators, useMonthlyActuals } from '../data/queries'
+import { useI18n, rich } from '../lib/i18n'
 import type { Indicator } from '../types'
 
 export default function Dashboard() {
+  const { t, lang } = useI18n()
   const { seasons, selected, selectedId } = useSeason()
   const { data: indicators = [], isLoading: li } = useIndicators()
   const { data: budgets = [], isLoading: lb } = useBudgets(selectedId)
@@ -64,31 +66,37 @@ export default function Dashboard() {
   if (!seasons.length) {
     return (
       <div>
-        <PageHeader title="Dashboard" />
-        <EmptyState icon={<LayoutDashboard size={40} />} title="Bienvenido al Tablero Lechero">
-          Empezá creando un ejercicio en <b>Presupuesto</b> y cargando indicadores. Acá vas a ver todo el panorama.
+        <PageHeader title={t('dash.title')} />
+        <EmptyState icon={<LayoutDashboard size={40} />} title={t('dash.welcome.title')}>
+          {rich(t('dash.welcome.body', { budget: t('nav.budget') }))}
         </EmptyState>
       </div>
     )
   }
 
-  if (li || lb || lm) return <Spinner label="Cargando tablero…" />
+  if (li || lb || lm) return <Spinner label={t('dash.loading')} />
+
+  const L_BUDGET = t('chart.budget')
+  const L_ACTUAL = t('chart.actual')
+  const prevKey = prevSeason ? t('chart.actualPrev', { name: prevSeason.name }) : t('chart.prevYear')
 
   const chartData = MONTHS.map((mo) => ({
-    mes: mo.short,
-    Presupuesto: budgetMap.get(`${focus?.id}|${mo.idx}`) ?? null,
-    Real: focus ? realMap.get(`${selectedId}|${focus.id}|${mo.idx}`) ?? null : null,
-    [prevSeason ? `Real ${prevSeason.name}` : 'Año anterior']: focus && prevSeason
+    mes: monthShort(mo.idx, lang),
+    [L_BUDGET]: budgetMap.get(`${focus?.id}|${mo.idx}`) ?? null,
+    [L_ACTUAL]: focus ? realMap.get(`${selectedId}|${focus.id}|${mo.idx}`) ?? null : null,
+    [prevKey]: focus && prevSeason
       ? realMap.get(`${prevSeason.id}|${focus.id}|${mo.idx}`) ?? null
       : null,
   }))
-  const prevKey = prevSeason ? `Real ${prevSeason.name}` : 'Año anterior'
 
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        subtitle={`Ejercicio ${selected?.name ?? ''}${prevSeason ? ` · comparado con ${prevSeason.name}` : ''}`}
+        title={t('dash.title')}
+        subtitle={
+          t('dash.subtitle', { name: selected?.name ?? '' }) +
+          (prevSeason ? t('dash.comparedWith', { prev: prevSeason.name }) : '')
+        }
       />
 
       {/* KPI cards */}
@@ -114,7 +122,7 @@ export default function Dashboard() {
                 {ind.unit && <span className="text-[11px] text-campo-700/40">{ind.unit}</span>}
               </div>
               <div className="mt-1 flex items-center gap-1 text-xs">
-                <span className="text-campo-700/50">Pres {fmtNumber(bud, ind.decimals)}</span>
+                <span className="text-campo-700/50">{t('dash.kpi.bud', { value: fmtNumber(bud, ind.decimals) })}</span>
                 {dev.pct !== null && (
                   <span className={`ml-auto inline-flex items-center gap-0.5 font-bold ${statusText[status]}`}>
                     {status === 'good' ? <TrendingUp size={13} /> : status === 'bad' ? <TrendingDown size={13} /> : <Minus size={13} />}
@@ -159,11 +167,11 @@ export default function Dashboard() {
                     contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb', fontSize: 13 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Presupuesto" stroke="#a0c78f" strokeWidth={2} strokeDasharray="5 4" dot={false} connectNulls />
+                  <Line type="monotone" dataKey={L_BUDGET} stroke="#a0c78f" strokeWidth={2} strokeDasharray="5 4" dot={false} connectNulls />
                   {prevSeason && (
                     <Line type="monotone" dataKey={prevKey} stroke="#9ca3af" strokeWidth={2} dot={false} connectNulls />
                   )}
-                  <Line type="monotone" dataKey="Real" stroke="#3e6f2e" strokeWidth={3} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey={L_ACTUAL} stroke="#3e6f2e" strokeWidth={3} dot={{ r: 3 }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -174,11 +182,11 @@ export default function Dashboard() {
             <table className="min-w-full border-separate border-spacing-0 text-sm">
               <thead>
                 <tr className="bg-campo-50 text-campo-700/70">
-                  <th className="text-left font-semibold px-4 py-2.5 border-b border-black/5">Mes</th>
-                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">Presup.</th>
-                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">Real</th>
-                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">Desvío</th>
-                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">%</th>
+                  <th className="text-left font-semibold px-4 py-2.5 border-b border-black/5">{t('dash.table.month')}</th>
+                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">{t('dash.table.budget')}</th>
+                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">{t('dash.table.actual')}</th>
+                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">{t('dash.table.deviation')}</th>
+                  <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">{t('dash.table.pct')}</th>
                   {prevSeason && (
                     <th className="text-right font-semibold px-3 py-2.5 border-b border-black/5">{prevSeason.name}</th>
                   )}
@@ -193,7 +201,7 @@ export default function Dashboard() {
                   const status = deviationStatus(real, bud, focus.better_direction)
                   return (
                     <tr key={mo.idx} className={ri % 2 ? 'bg-campo-50/30' : 'bg-white'}>
-                      <td className="px-4 py-2 border-b border-black/5 font-semibold text-campo-800">{mo.long}</td>
+                      <td className="px-4 py-2 border-b border-black/5 font-semibold text-campo-800">{monthLong(mo.idx, lang)}</td>
                       <td className="px-3 py-2 border-b border-black/5 text-right tabular-nums text-campo-700/60">{fmtNumber(bud, focus.decimals)}</td>
                       <td className="px-3 py-2 border-b border-black/5 text-right tabular-nums font-bold text-campo-800">{fmtNumber(real, focus.decimals)}</td>
                       <td className={`px-3 py-2 border-b border-black/5 text-right tabular-nums ${statusText[status]}`}>

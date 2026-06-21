@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import { ClipboardPen } from 'lucide-react'
 import { PageHeader, Spinner, EmptyState, Badge } from '../components/ui'
 import EditableCell from '../components/EditableCell'
-import { MONTHS, WEEKS, monthLong } from '../lib/months'
+import { MONTHS, WEEKS, monthLong, monthShort } from '../lib/months'
 import { fmtNumber, deviation, deviationStatus, statusBg } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useBudgets, useIndicators, useUpsertWeekly, useWeeklyEntries } from '../data/queries'
+import { useI18n, rich } from '../lib/i18n'
 
 export default function CargaSemanal() {
+  const { t, lang } = useI18n()
   const { seasons, selected, selectedId } = useSeason()
   const { data: indicators = [], isLoading: li } = useIndicators()
   const { data: weekly = [], isLoading: lw } = useWeeklyEntries(selectedId)
@@ -38,9 +40,9 @@ export default function CargaSemanal() {
   if (!seasons.length) {
     return (
       <div>
-        <PageHeader title="Carga semanal" />
-        <EmptyState icon={<ClipboardPen size={40} />} title="Primero creá un ejercicio">
-          Andá a <b>Presupuesto</b> para crear el ejercicio del año. Después cargás acá los datos semana a semana.
+        <PageHeader title={t('weekly.title')} />
+        <EmptyState icon={<ClipboardPen size={40} />} title={t('weekly.empty.title')}>
+          {rich(t('weekly.empty.body', { budget: t('nav.budget') }))}
         </EmptyState>
       </div>
     )
@@ -49,8 +51,8 @@ export default function CargaSemanal() {
   return (
     <div>
       <PageHeader
-        title="Carga semanal"
-        subtitle={`Ejercicio ${selected?.name ?? ''} · ${monthLong(month)}`}
+        title={t('weekly.title')}
+        subtitle={t('weekly.subtitle', { name: selected?.name ?? '', month: monthLong(month, lang) })}
       />
 
       {/* Selector de mes */}
@@ -65,16 +67,16 @@ export default function CargaSemanal() {
                 : 'bg-white text-campo-700/70 ring-1 ring-campo-200 hover:bg-campo-50'
             }`}
           >
-            {mo.short}
+            {monthShort(mo.idx, lang)}
           </button>
         ))}
       </div>
 
       {li || lw ? (
-        <Spinner label="Cargando datos…" />
+        <Spinner label={t('weekly.loading')} />
       ) : !indicators.length ? (
-        <EmptyState icon={<ClipboardPen size={40} />} title="No hay indicadores activos">
-          Creá indicadores en la sección <b>Indicadores</b>.
+        <EmptyState icon={<ClipboardPen size={40} />} title={t('weekly.noind.title')}>
+          {rich(t('weekly.noind.body', { indicators: t('nav.indicators') }))}
         </EmptyState>
       ) : (
         <div className="card overflow-x-auto scroll-x">
@@ -82,21 +84,21 @@ export default function CargaSemanal() {
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 bg-campo-50 text-left font-semibold text-campo-800 px-4 py-3 border-b border-black/5 min-w-[180px]">
-                  Indicador
+                  {t('weekly.col.indicator')}
                 </th>
                 {WEEKS.map((w) => (
                   <th key={w} className="bg-campo-50 text-campo-700/70 font-semibold px-2 py-3 border-b border-black/5 text-center min-w-[64px]">
-                    S{w}
+                    {t('weekly.col.week', { n: w })}
                   </th>
                 ))}
                 <th className="bg-campo-100 text-campo-800 font-bold px-3 py-3 border-b border-black/5 text-center min-w-[78px]">
-                  Mes
+                  {t('weekly.col.month')}
                 </th>
                 <th className="bg-campo-50 text-campo-700/70 font-semibold px-3 py-3 border-b border-black/5 text-center min-w-[72px]">
-                  Presup
+                  {t('weekly.col.budget')}
                 </th>
                 <th className="bg-campo-50 text-campo-700/70 font-semibold px-3 py-3 border-b border-black/5 text-center min-w-[88px]">
-                  Desvío
+                  {t('weekly.col.deviation')}
                 </th>
               </tr>
             </thead>
@@ -153,8 +155,7 @@ export default function CargaSemanal() {
       )}
 
       <p className="text-xs text-campo-700/50 mt-3 px-1">
-        Cargá cada semana (S1–S5). El <b>promedio mensual</b> se calcula solo con las semanas que cargues.
-        Se guarda al salir de la celda.
+        {rich(t('weekly.footer'))}
       </p>
     </div>
   )
