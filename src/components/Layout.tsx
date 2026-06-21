@@ -15,13 +15,13 @@ import { useSeason } from '../data/season'
 import { useI18n } from '../lib/i18n'
 import LangToggle from './LangToggle'
 
-const NAV = [
+const NAV: { to: string; key: string; icon: typeof LayoutDashboard; end?: boolean }[] = [
   { to: '/', key: 'nav.dashboard', icon: LayoutDashboard, end: true },
   { to: '/carga', key: 'nav.weekly', icon: ClipboardPen },
   { to: '/presupuesto', key: 'nav.budget', icon: Target },
   { to: '/indicadores', key: 'nav.indicators', icon: SlidersHorizontal },
   { to: '/datos', key: 'nav.data', icon: FileSpreadsheet },
-] as const
+]
 
 function SeasonSelector() {
   const { seasons, selectedId, setSelectedId } = useSeason()
