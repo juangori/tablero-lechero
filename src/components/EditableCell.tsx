@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { parseNum } from '../lib/format'
 
 interface Props {
   value: number | null | undefined
@@ -21,6 +22,11 @@ export default function EditableCell({ value, onCommit, className = '', placehol
   const commit = () => {
     setEditing(false)
     const parsed = parseNum(text)
+    // Si hay texto pero no parsea (typo), no borramos el dato: revertimos al valor previo.
+    if (text.trim() !== '' && parsed === null) {
+      setText(toText(value))
+      return
+    }
     const current = value ?? null
     if (parsed !== current) onCommit(parsed)
   }
@@ -55,13 +61,4 @@ function toText(v: number | null | undefined): string {
   if (v === null || v === undefined || Number.isNaN(v)) return ''
   // mostrar con coma decimal (es-AR) pero sin forzar decimales fijos
   return String(v).replace('.', ',')
-}
-
-function parseNum(t: string): number | null {
-  let clean = t.trim()
-  if (clean === '') return null
-  // Si hay coma, es el decimal (y los puntos son miles). Si no, el punto es decimal.
-  if (clean.includes(',')) clean = clean.replace(/\./g, '').replace(',', '.')
-  const n = Number(clean)
-  return Number.isFinite(n) ? n : null
 }

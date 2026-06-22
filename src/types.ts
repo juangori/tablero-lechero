@@ -1,5 +1,9 @@
 export type BetterDirection = 'higher' | 'lower' | 'none'
 
+// Cómo se combinan las semanas en el mes y los meses en el año:
+//  avg = promedio (tasas), sum = suma (eventos acumulables), last = último valor (stocks)
+export type Aggregation = 'avg' | 'sum' | 'last'
+
 export interface Indicator {
   id: string
   name: string
@@ -7,7 +11,7 @@ export interface Indicator {
   category: string
   decimals: number
   better_direction: BetterDirection
-  is_percent: boolean
+  aggregation: Aggregation
   active: boolean
   sort_order: number
   created_at?: string

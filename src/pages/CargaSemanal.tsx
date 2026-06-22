@@ -3,10 +3,11 @@ import { ClipboardPen } from 'lucide-react'
 import { PageHeader, Spinner, EmptyState, Badge } from '../components/ui'
 import EditableCell from '../components/EditableCell'
 import { MONTHS, WEEKS, monthLong, monthShort } from '../lib/months'
-import { fmtNumber, deviation, deviationStatus, statusBg } from '../lib/format'
+import { fmtNumber, deviation, deviationStatus, statusBg, rollup } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useBudgets, useIndicators, useUpsertWeekly, useWeeklyEntries } from '../data/queries'
 import { useI18n, rich } from '../lib/i18n'
+import type { Aggregation } from '../types'
 
 export default function CargaSemanal() {
   const { t, lang } = useI18n()
@@ -29,12 +30,11 @@ export default function CargaSemanal() {
     return m
   }, [budgets])
 
-  const monthAvg = (indId: string) => {
-    const vals = WEEKS.map((w) => weekMap.get(`${indId}|${month}|${w}`)).filter(
-      (v): v is number => v !== null && v !== undefined,
-    )
-    if (!vals.length) return null
-    return vals.reduce((a, b) => a + b, 0) / vals.length
+  // Valor del mes a partir de las semanas, según la agregación del indicador
+  // (suma para eventos, último para stock, promedio para tasas). Igual que la vista.
+  const monthValue = (ind: { id: string; aggregation: Aggregation }) => {
+    const vals = WEEKS.map((w) => weekMap.get(`${ind.id}|${month}|${w}`))
+    return rollup(vals, ind.aggregation)
   }
 
   if (!seasons.length) {
@@ -104,7 +104,7 @@ export default function CargaSemanal() {
             </thead>
             <tbody>
               {indicators.map((ind, ri) => {
-                const avg = monthAvg(ind.id)
+                const avg = monthValue(ind)
                 const bud = budgetMap.get(`${ind.id}|${month}`) ?? null
                 const dev = deviation(avg, bud)
                 const status = deviationStatus(avg, bud, ind.better_direction)
@@ -140,7 +140,7 @@ export default function CargaSemanal() {
                       {dev.pct !== null ? (
                         <Badge className={statusBg[status]}>
                           {dev.pct > 0 ? '+' : ''}
-                          {fmtNumber(dev.pct * 100, 0)}%
+                          {fmtNumber(dev.pct * 100, 1)}%
                         </Badge>
                       ) : (
                         <span className="text-campo-700/30">—</span>

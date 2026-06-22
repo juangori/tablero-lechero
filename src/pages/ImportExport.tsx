@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx'
 import { Download, Upload, FileSpreadsheet, Loader2, CheckCircle2 } from 'lucide-react'
 import { PageHeader } from '../components/ui'
 import { MONTHS, monthShort, monthLong, monthHeaderKeys } from '../lib/months'
-import { deviation } from '../lib/format'
+import { deviation, parseNum } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useIndicators } from '../data/queries'
 import { supabase } from '../lib/supabase'
@@ -123,8 +123,8 @@ export default function ImportExport() {
             }
           }
           if (raw === undefined || raw === '' || raw === null) continue
-          const value = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'))
-          if (Number.isFinite(value))
+          const value = typeof raw === 'number' ? raw : parseNum(String(raw))
+          if (value !== null && Number.isFinite(value))
             upserts.push({ season_id: selectedId, indicator_id: ind.id, month_index: mo.idx, value })
         }
       }

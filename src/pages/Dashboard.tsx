@@ -12,7 +12,7 @@ import {
 import { LayoutDashboard, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { PageHeader, Spinner, EmptyState } from '../components/ui'
 import { MONTHS, monthShort, monthLong } from '../lib/months'
-import { fmtNumber, deviation, deviationStatus, statusText } from '../lib/format'
+import { fmtNumber, deviation, deviationStatus, statusText, rollup } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useBudgets, useIndicators, useMonthlyActuals } from '../data/queries'
 import { useI18n, rich } from '../lib/i18n'
@@ -26,10 +26,15 @@ export default function Dashboard() {
   const { data: monthly = [], isLoading: lm } = useMonthlyActuals()
   const [focusId, setFocusId] = useState<string | null>(null)
 
-  const prevSeason = useMemo(
-    () => seasons.find((s) => selected && s.start_year === selected.start_year - 1),
-    [seasons, selected],
-  )
+  // Ejercicio anterior: el contiguo (start_year-1) o, si falta, el más cercano por debajo.
+  const prevSeason = useMemo(() => {
+    if (!selected) return undefined
+    const exact = seasons.find((s) => s.start_year === selected.start_year - 1)
+    if (exact) return exact
+    return seasons
+      .filter((s) => s.start_year < selected.start_year)
+      .sort((a, b) => b.start_year - a.start_year)[0]
+  }, [seasons, selected])
 
   // real[seasonId|indId|month] -> value
   const realMap = useMemo(() => {
@@ -44,18 +49,21 @@ export default function Dashboard() {
     return m
   }, [budgets])
 
-  const annualAvg = (seasonId: string | undefined, indId: string, useBudget = false) => {
-    const vals: number[] = []
-    for (const mo of MONTHS) {
-      const v = useBudget
-        ? budgetMap.get(`${indId}|${mo.idx}`)
-        : seasonId
-          ? realMap.get(`${seasonId}|${indId}|${mo.idx}`)
-          : null
-      if (v !== null && v !== undefined) vals.push(v)
-    }
-    if (!vals.length) return null
-    return vals.reduce((a, b) => a + b, 0) / vals.length
+  // KPI anual del real, según la agregación del indicador (avg/sum/last).
+  const annualReal = (ind: Indicator) => {
+    const vals = MONTHS.map((mo) => realMap.get(`${selectedId}|${ind.id}|${mo.idx}`))
+    return rollup(vals, ind.aggregation)
+  }
+
+  // KPI anual del presupuesto, alineado a los meses que ya tienen real cargado (YTD)
+  // para que la comparación sea peras con peras. Si no hay real, usa el año completo.
+  const annualBudget = (ind: Indicator) => {
+    const realMonths = MONTHS.filter(
+      (mo) => realMap.get(`${selectedId}|${ind.id}|${mo.idx}`) != null,
+    )
+    const months = realMonths.length ? realMonths : MONTHS
+    const vals = months.map((mo) => budgetMap.get(`${ind.id}|${mo.idx}`))
+    return rollup(vals, ind.aggregation)
   }
 
   const focus: Indicator | undefined = useMemo(
@@ -102,8 +110,8 @@ export default function Dashboard() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {indicators.map((ind) => {
-          const real = annualAvg(selectedId, ind.id)
-          const bud = annualAvg(undefined, ind.id, true)
+          const real = annualReal(ind)
+          const bud = annualBudget(ind)
           const dev = deviation(real, bud)
           const status = deviationStatus(real, bud, ind.better_direction)
           return (
@@ -127,7 +135,7 @@ export default function Dashboard() {
                   <span className={`ml-auto inline-flex items-center gap-0.5 font-bold ${statusText[status]}`}>
                     {status === 'good' ? <TrendingUp size={13} /> : status === 'bad' ? <TrendingDown size={13} /> : <Minus size={13} />}
                     {dev.pct > 0 ? '+' : ''}
-                    {fmtNumber(dev.pct * 100, 0)}%
+                    {fmtNumber(dev.pct * 100, 1)}%
                   </span>
                 )}
               </div>
@@ -208,7 +216,7 @@ export default function Dashboard() {
                         {dev.abs !== null ? (dev.abs > 0 ? '+' : '') + fmtNumber(dev.abs, focus.decimals) : '—'}
                       </td>
                       <td className={`px-3 py-2 border-b border-black/5 text-right tabular-nums font-semibold ${statusText[status]}`}>
-                        {dev.pct !== null ? (dev.pct > 0 ? '+' : '') + fmtNumber(dev.pct * 100, 0) + '%' : '—'}
+                        {dev.pct !== null ? (dev.pct > 0 ? '+' : '') + fmtNumber(dev.pct * 100, 1) + '%' : '—'}
                       </td>
                       {prevSeason && (
                         <td className="px-3 py-2 border-b border-black/5 text-right tabular-nums text-campo-700/50">{fmtNumber(prev, focus.decimals)}</td>

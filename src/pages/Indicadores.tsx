@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, SlidersHorizontal, Eye, EyeOff, Sparkles } from 'lucide-react'
 import { useDeleteIndicator, useIndicators, useSaveIndicator } from '../data/queries'
 import { DEFAULT_INDICATORS } from '../data/defaults'
-import { CATEGORIES, type BetterDirection, type Indicator } from '../types'
+import { CATEGORIES, type Aggregation, type BetterDirection, type Indicator } from '../types'
 import { PageHeader, Spinner, EmptyState, Modal, Badge } from '../components/ui'
 import { supabase } from '../lib/supabase'
 import { useI18n, rich } from '../lib/i18n'
@@ -19,13 +20,14 @@ const empty: Partial<Indicator> = {
   category: 'Producción',
   decimals: 1,
   better_direction: 'higher',
-  is_percent: false,
+  aggregation: 'avg',
   active: true,
   sort_order: 999,
 }
 
 export default function Indicadores() {
   const { t, tCat } = useI18n()
+  const qc = useQueryClient()
   const { data: indicators, isLoading } = useIndicators(true)
   const save = useSaveIndicator()
   const del = useDeleteIndicator()
@@ -42,11 +44,9 @@ export default function Indicadores() {
 
   const seedDefaults = async () => {
     setSeeding(true)
-    await supabase.from('indicators').insert(
-      DEFAULT_INDICATORS.map((d) => ({ ...d, is_percent: false, active: true })),
-    )
-    await new Promise((r) => setTimeout(r, 300))
-    window.location.reload()
+    await supabase.from('indicators').insert(DEFAULT_INDICATORS.map((d) => ({ ...d, active: true })))
+    await qc.invalidateQueries({ queryKey: ['indicators'] })
+    setSeeding(false)
   }
 
   if (isLoading) return <Spinner label={t('ind.loading')} />
@@ -196,6 +196,18 @@ function IndicatorModal({
               <option value="none">{t('dir.none')}</option>
             </select>
           </div>
+        </div>
+        <div>
+          <label className="label">{t('ind.f.aggregation')}</label>
+          <select
+            className="input"
+            value={form.aggregation ?? 'avg'}
+            onChange={(e) => set('aggregation', e.target.value as Aggregation)}
+          >
+            <option value="avg">{t('agg.avg')}</option>
+            <option value="sum">{t('agg.sum')}</option>
+            <option value="last">{t('agg.last')}</option>
+          </select>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
