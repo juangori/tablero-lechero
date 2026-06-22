@@ -97,7 +97,7 @@ const en: Dict = {
   'budget.noind.body':
     'Go to **{indicators}** and create or activate the ones you want to budget.',
   'budget.col.indicator': 'Indicator',
-  'budget.col.avg': 'Avg.',
+  'budget.col.annual': 'Annual',
   'budget.footer':
     'Saved automatically when you leave each cell. Tip: press **Enter** to confirm and move on.',
 
@@ -134,9 +134,13 @@ const en: Dict = {
   'ind.f.category': 'Category',
   'ind.f.decimals': 'Decimals',
   'ind.f.direction': 'Direction',
+  'ind.f.aggregation': 'Aggregation',
   'dir.higher': 'Higher is better',
   'dir.lower': 'Lower is better',
   'dir.none': 'Neutral',
+  'agg.avg': 'Monthly average',
+  'agg.sum': 'Sum (total)',
+  'agg.last': 'Last value',
 
   // Categories (display labels; canonical value stays Spanish)
   'cat.Producción': 'Production',
@@ -267,7 +271,7 @@ const es: Dict = {
   'budget.noind.body':
     'Andá a **{indicators}** y creá o activá los que quieras presupuestar.',
   'budget.col.indicator': 'Indicador',
-  'budget.col.avg': 'Prom.',
+  'budget.col.annual': 'Anual',
   'budget.footer':
     'Se guarda solo al salir de cada celda. Tip: presioná **Enter** para confirmar y pasar.',
 
@@ -305,9 +309,13 @@ const es: Dict = {
   'ind.f.category': 'Categoría',
   'ind.f.decimals': 'Decimales',
   'ind.f.direction': 'Sentido',
+  'ind.f.aggregation': 'Agregación',
   'dir.higher': 'Más es mejor',
   'dir.lower': 'Menos es mejor',
   'dir.none': 'Neutro',
+  'agg.avg': 'Promedio mensual',
+  'agg.sum': 'Suma (total)',
+  'agg.last': 'Último valor',
 
   // Categories
   'cat.Producción': 'Producción',

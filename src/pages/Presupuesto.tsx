@@ -3,7 +3,7 @@ import { CalendarPlus, Copy, Target } from 'lucide-react'
 import { PageHeader, Spinner, EmptyState, Modal } from '../components/ui'
 import EditableCell from '../components/EditableCell'
 import { MONTHS, monthShort, seasonNameFromStart } from '../lib/months'
-import { fmtNumber } from '../lib/format'
+import { fmtNumber, rollup } from '../lib/format'
 import { useSeason } from '../data/season'
 import {
   useBudgets,
@@ -14,6 +14,7 @@ import {
   useUpsertBudget,
 } from '../data/queries'
 import { useI18n, rich } from '../lib/i18n'
+import type { Indicator } from '../types'
 
 export default function Presupuesto() {
   const { t, lang } = useI18n()
@@ -31,12 +32,11 @@ export default function Presupuesto() {
     return m
   }, [budgets])
 
-  const rowAvg = (indId: string) => {
-    const vals = MONTHS.map((mo) => map.get(`${indId}|${mo.idx}`)).filter(
-      (v): v is number => v !== null && v !== undefined,
-    )
-    if (!vals.length) return null
-    return vals.reduce((a, b) => a + b, 0) / vals.length
+  // Total anual del presupuesto, según la agregación del indicador
+  // (suma para eventos, último para stock, promedio para tasas).
+  const rowAnnual = (ind: Indicator) => {
+    const vals = MONTHS.map((mo) => map.get(`${ind.id}|${mo.idx}`))
+    return rollup(vals, ind.aggregation)
   }
 
   if (!seasons.length) {
@@ -91,7 +91,7 @@ export default function Presupuesto() {
                   </th>
                 ))}
                 <th className="bg-campo-100 text-campo-800 font-bold px-3 py-3 border-b border-black/5 text-center min-w-[80px]">
-                  {t('budget.col.avg')}
+                  {t('budget.col.annual')}
                 </th>
               </tr>
             </thead>
@@ -118,7 +118,7 @@ export default function Presupuesto() {
                     </td>
                   ))}
                   <td className="border-b border-black/5 px-3 text-right font-bold tabular-nums text-campo-800 bg-campo-50/40">
-                    {fmtNumber(rowAvg(ind.id), ind.decimals)}
+                    {fmtNumber(rowAnnual(ind), ind.decimals)}
                   </td>
                 </tr>
               ))}
