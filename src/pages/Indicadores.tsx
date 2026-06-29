@@ -26,7 +26,7 @@ const empty: Partial<Indicator> = {
 }
 
 export default function Indicadores() {
-  const { t, tCat } = useI18n()
+  const { t, tCat, tInd, tUnit } = useI18n()
   const qc = useQueryClient()
   const { data: indicators, isLoading } = useIndicators(true)
   const save = useSaveIndicator()
@@ -84,9 +84,9 @@ export default function Indicadores() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`font-semibold ${ind.active ? 'text-campo-800' : 'text-campo-700/40 line-through'}`}>
-                          {ind.name}
+                          {tInd(ind.name)}
                         </span>
-                        {ind.unit && <Badge className="bg-campo-50 text-campo-700/70 ring-campo-200">{ind.unit}</Badge>}
+                        {ind.unit && <Badge className="bg-campo-50 text-campo-700/70 ring-campo-200">{tUnit(ind.unit)}</Badge>}
                         <Badge className={DIR_BADGE[ind.better_direction]}>{t('dir.' + ind.better_direction)}</Badge>
                       </div>
                     </div>
@@ -106,7 +106,7 @@ export default function Indicadores() {
                     <button
                       className="p-2 rounded-lg text-red-500 hover:bg-red-50"
                       onClick={() => {
-                        if (confirm(t('ind.delete.confirm', { name: ind.name })))
+                        if (confirm(t('ind.delete.confirm', { name: tInd(ind.name) })))
                           del.mutate(ind.id)
                       }}
                     >

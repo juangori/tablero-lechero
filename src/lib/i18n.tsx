@@ -370,6 +370,61 @@ const es: Dict = {
 
 const DICTS: Record<Lang, Dict> = { en, es }
 
+/* ------------------------------------------------------------------ *
+ * Indicadores y unidades: SOLO etiqueta visible. El valor canónico
+ * guardado en Supabase sigue en español, igual que las categorías, así
+ * que NO se rompe ningún cálculo (todo se une por indicator_id, no por
+ * nombre) ni el import de planillas en español. Los indicadores creados
+ * por el usuario que no estén en este mapa caen al nombre tal cual.
+ * ------------------------------------------------------------------ */
+const IND_EN: Dict = {
+  'Litros por vaca': 'Liters per cow',
+  Grasa: 'Fat',
+  Proteína: 'Protein',
+  'Concentrado por vaca': 'Concentrate per cow',
+  'Silo por vaca': 'Silage per cow',
+  'Pasto por vaca': 'Pasture per cow',
+  'Costo de alimentación': 'Feed cost',
+  'RCS (células somáticas)': 'SCC (somatic cell count)',
+  'Incidencia de mastitis': 'Mastitis incidence',
+  Bacterias: 'Bacteria',
+  'Vacas en ordeñe': 'Cows in milk',
+  'Vacas masa': 'Total herd',
+  'Muertes en guachera': 'Calf deaths (nursery)',
+  'Muertes al parto': 'Deaths at calving',
+  'Gramos/día recría': 'Grams/day (heifers)',
+}
+
+const UNIT_EN: Dict = {
+  'l/vaca/día': 'L/cow/day',
+  'kg MS': 'kg DM',
+  'kg MF': 'kg FM',
+  'US$/vaca': 'US$/cow',
+  'miles/ml': 'thousand/ml',
+  'ufc/ml': 'cfu/ml',
+  cab: 'head',
+  'g/día': 'g/day',
+}
+
+/** Nombre visible del indicador (el valor guardado sigue en español). */
+export function indName(canonical: string, lang: Lang): string {
+  return lang === 'en' ? IND_EN[canonical] ?? canonical : canonical
+}
+
+/** Unidad visible (el valor guardado sigue en español). */
+export function unitLabel(unit: string, lang: Lang): string {
+  return lang === 'en' ? UNIT_EN[unit] ?? unit : unit
+}
+
+/**
+ * Todas las formas (ES canónico + EN) de un nombre de indicador, para que
+ * el import de planillas haga match aunque la columna venga traducida.
+ */
+export function indNameForms(canonical: string): string[] {
+  const en = IND_EN[canonical]
+  return en && en !== canonical ? [canonical, en] : [canonical]
+}
+
 function interpolate(str: string, vars?: Record<string, string | number>): string {
   if (!vars) return str
   return str.replace(/\{(\w+)\}/g, (_m, k) =>
@@ -397,6 +452,10 @@ interface I18nCtx {
   t: TFn
   /** Etiqueta visible de una categoría (el valor guardado sigue en español). */
   tCat: (cat: string) => string
+  /** Nombre visible de un indicador (el valor guardado sigue en español). */
+  tInd: (name: string) => string
+  /** Unidad visible de un indicador (el valor guardado sigue en español). */
+  tUnit: (unit: string) => string
 }
 
 const Ctx = createContext<I18nCtx>(null as unknown as I18nCtx)
@@ -441,14 +500,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     [lang],
   )
 
+  const tInd = useCallback((name: string) => indName(name, lang), [lang])
+  const tUnit = useCallback((unit: string) => unitLabel(unit, lang), [lang])
+
   useEffect(() => {
     document.documentElement.lang = lang
     document.title = t('app.docTitle')
   }, [lang, t])
 
   const value = useMemo<I18nCtx>(
-    () => ({ lang, setLang, toggle, t, tCat }),
-    [lang, setLang, toggle, t, tCat],
+    () => ({ lang, setLang, toggle, t, tCat, tInd, tUnit }),
+    [lang, setLang, toggle, t, tCat, tInd, tUnit],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

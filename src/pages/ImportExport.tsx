@@ -7,7 +7,7 @@ import { deviation, parseNum } from '../lib/format'
 import { useSeason } from '../data/season'
 import { useIndicators } from '../data/queries'
 import { supabase } from '../lib/supabase'
-import { useI18n, rich, type Lang, type TFn } from '../lib/i18n'
+import { useI18n, rich, indName, unitLabel, indNameForms, type Lang, type TFn } from '../lib/i18n'
 import type { Budget, Indicator, MonthlyActual, Season, WeeklyEntry } from '../types'
 
 export default function ImportExport() {
@@ -33,8 +33,8 @@ export default function ImportExport() {
       wb,
       XLSX.utils.json_to_sheet(
         indicators.map((i) => ({
-          [t('xls.h.indicator')]: i.name,
-          [t('xls.h.unit')]: i.unit,
+          [t('xls.h.indicator')]: indName(i.name, lang),
+          [t('xls.h.unit')]: i.unit ? unitLabel(i.unit, lang) : i.unit,
           [t('xls.h.category')]: i.category,
           [t('xls.h.decimals')]: i.decimals,
           [t('xls.h.direction')]: t('dir.' + i.better_direction),
@@ -51,14 +51,14 @@ export default function ImportExport() {
     }
 
     // Semanal crudo
-    const indName = new Map(indicators.map((i) => [i.id, i.name]))
+    const indById = new Map(indicators.map((i) => [i.id, indName(i.name, lang)]))
     const seaName = new Map(seasons.map((s) => [s.id, s.name]))
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.json_to_sheet(
         ((weekly ?? []) as WeeklyEntry[]).map((w) => ({
           [t('xls.h.season')]: seaName.get(w.season_id),
-          [t('xls.h.indicator')]: indName.get(w.indicator_id),
+          [t('xls.h.indicator')]: indById.get(w.indicator_id),
           [t('xls.h.monthIdx')]: w.month_index,
           [t('xls.h.month')]: monthLong(w.month_index, lang),
           [t('xls.h.week')]: w.week_index,
@@ -103,7 +103,12 @@ export default function ImportExport() {
       const sheetName =
         wb.SheetNames.find((n) => /presupuesto|budget/i.test(n)) ?? wb.SheetNames[0]
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[sheetName])
-      const byName = new Map(indicators.map((i) => [norm(i.name), i]))
+      // Match por nombre tolerante: acepta el nombre canónico (ES) y su
+      // traducción (EN), así una planilla exportada en cualquier idioma reimporta bien.
+      const byName = new Map<string, Indicator>()
+      for (const i of indicators) {
+        for (const form of indNameForms(i.name)) byName.set(norm(form), i)
+      }
       const upserts: { season_id: string; indicator_id: string; month_index: number; value: number | null }[] = []
       let matched = 0
       for (const row of rows) {
@@ -232,7 +237,7 @@ function sheetResumen(
       const real = rMap.get(`${season.id}|${ind.id}|${mo.idx}`) ?? null
       const prevV = prev ? rMap.get(`${prev.id}|${ind.id}|${mo.idx}`) ?? null : null
       const dev = deviation(real, bud)
-      aoa.push([ind.name, monthShort(mo.idx, lang), bud, real, dev.abs, dev.pct, prevV])
+      aoa.push([indName(ind.name, lang), monthShort(mo.idx, lang), bud, real, dev.abs, dev.pct, prevV])
     }
   }
   return aoa
@@ -249,7 +254,7 @@ function sheetPresupuesto(
   const header = [t('xls.h.indicator'), ...MONTHS.map((m) => monthShort(m.idx, lang))]
   const aoa: (string | number | null)[][] = [header]
   for (const ind of indicators) {
-    aoa.push([ind.name, ...MONTHS.map((mo) => bMap.get(`${ind.id}|${mo.idx}`) ?? null)])
+    aoa.push([indName(ind.name, lang), ...MONTHS.map((mo) => bMap.get(`${ind.id}|${mo.idx}`) ?? null)])
   }
   return aoa
 }

@@ -19,7 +19,7 @@ import { useI18n, rich } from '../lib/i18n'
 import type { Indicator } from '../types'
 
 export default function Dashboard() {
-  const { t, lang } = useI18n()
+  const { t, lang, tInd, tUnit } = useI18n()
   const { seasons, selected, selectedId } = useSeason()
   const { data: indicators = [], isLoading: li } = useIndicators()
   const { data: budgets = [], isLoading: lb } = useBudgets(selectedId)
@@ -122,12 +122,12 @@ export default function Dashboard() {
                 focus?.id === ind.id ? 'ring-2 ring-campo-500' : ''
               }`}
             >
-              <div className="text-xs font-semibold text-campo-700/60 truncate">{ind.name}</div>
+              <div className="text-xs font-semibold text-campo-700/60 truncate">{tInd(ind.name)}</div>
               <div className="mt-1 flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold text-campo-800 tabular-nums">
                   {fmtNumber(real, ind.decimals)}
                 </span>
-                {ind.unit && <span className="text-[11px] text-campo-700/40">{ind.unit}</span>}
+                {ind.unit && <span className="text-[11px] text-campo-700/40">{tUnit(ind.unit)}</span>}
               </div>
               <div className="mt-1 flex items-center gap-1 text-xs">
                 <span className="text-campo-700/50">{t('dash.kpi.bud', { value: fmtNumber(bud, ind.decimals) })}</span>
@@ -150,7 +150,7 @@ export default function Dashboard() {
           <div className="card p-4 md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
               <h2 className="font-bold text-campo-800">
-                {focus.name} {focus.unit && <span className="text-sm font-normal text-campo-700/50">({focus.unit})</span>}
+                {tInd(focus.name)} {focus.unit && <span className="text-sm font-normal text-campo-700/50">({tUnit(focus.unit)})</span>}
               </h2>
               <select
                 className="input max-w-[220px]"
@@ -159,7 +159,7 @@ export default function Dashboard() {
               >
                 {indicators.map((i) => (
                   <option key={i.id} value={i.id}>
-                    {i.name}
+                    {tInd(i.name)}
                   </option>
                 ))}
               </select>

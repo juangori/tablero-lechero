@@ -17,7 +17,7 @@ import { useI18n, rich } from '../lib/i18n'
 import type { Indicator } from '../types'
 
 export default function Presupuesto() {
-  const { t, lang } = useI18n()
+  const { t, lang, tInd, tUnit } = useI18n()
   const { seasons, selected, selectedId, setSelectedId } = useSeason()
   const { data: indicators = [], isLoading: li } = useIndicators()
   const { data: budgets = [], isLoading: lb } = useBudgets(selectedId)
@@ -99,8 +99,8 @@ export default function Presupuesto() {
               {indicators.map((ind, ri) => (
                 <tr key={ind.id} className={ri % 2 ? 'bg-campo-50/30' : 'bg-white'}>
                   <td className={`sticky left-0 z-10 ${ri % 2 ? 'bg-[#f4f7f1]' : 'bg-white'} px-4 py-2 border-b border-black/5`}>
-                    <div className="font-semibold text-campo-800 leading-tight">{ind.name}</div>
-                    {ind.unit && <div className="text-[11px] text-campo-700/50">{ind.unit}</div>}
+                    <div className="font-semibold text-campo-800 leading-tight">{tInd(ind.name)}</div>
+                    {ind.unit && <div className="text-[11px] text-campo-700/50">{tUnit(ind.unit)}</div>}
                   </td>
                   {MONTHS.map((mo) => (
                     <td key={mo.idx} className="border-b border-black/5 px-1">
