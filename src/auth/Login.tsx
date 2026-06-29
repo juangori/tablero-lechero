@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Milk, Loader2, LogIn } from 'lucide-react'
+import { Loader2, LogIn } from 'lucide-react'
 import { useAuth } from './AuthProvider'
 import { useI18n } from '../lib/i18n'
 import LangToggle from '../components/LangToggle'
+import CowIcon from '../components/CowIcon'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -29,7 +30,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <div className="h-16 w-16 rounded-2xl bg-campo-600 text-white grid place-items-center shadow-lg shadow-campo-600/20">
-            <Milk size={32} />
+            <CowIcon size={38} />
           </div>
           <h1 className="mt-4 text-2xl font-extrabold text-campo-800">{t('app.name')}</h1>
           <p className="text-sm text-campo-700/70">{t('login.brandSub')}</p>

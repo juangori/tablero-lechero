@@ -5,7 +5,6 @@ import {
   Target,
   SlidersHorizontal,
   FileSpreadsheet,
-  Milk,
   LogOut,
   ChevronDown,
 } from 'lucide-react'
@@ -14,6 +13,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useSeason } from '../data/season'
 import { useI18n } from '../lib/i18n'
 import LangToggle from './LangToggle'
+import CowIcon from './CowIcon'
 
 const NAV: { to: string; key: string; icon: typeof LayoutDashboard; end?: boolean }[] = [
   { to: '/', key: 'nav.dashboard', icon: LayoutDashboard, end: true },
@@ -59,7 +59,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-campo-800 text-white">
         <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10">
           <div className="h-9 w-9 rounded-xl bg-white/15 grid place-items-center">
-            <Milk size={20} />
+            <CowIcon size={22} />
           </div>
           <div className="leading-tight">
             <div className="font-extrabold">{t('app.name')}</div>
@@ -98,7 +98,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 bg-campo-700 text-white shadow-sm">
           <div className="flex items-center justify-between gap-3 px-4 md:px-8 h-16">
             <div className="md:hidden flex items-center gap-2">
-              <Milk size={22} />
+              <CowIcon size={24} />
               <span className="font-extrabold">{t('app.name')}</span>
             </div>
             <div className="hidden md:block text-sm text-white/70">
